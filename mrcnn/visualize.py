@@ -163,6 +163,11 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             p = Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
+    plt.savefig(os.path.join('./logs/image.png'))
+
+    print(os.path.realpath('.'))
+    print("saved image in", os.path.join('./logs/image.png'))
+
     if auto_show:
         plt.show()
 
