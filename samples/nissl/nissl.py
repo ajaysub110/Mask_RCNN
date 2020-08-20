@@ -490,3 +490,4 @@ if __name__ == '__main__':
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'test'".format(args.command))
+
