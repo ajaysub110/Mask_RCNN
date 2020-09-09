@@ -87,9 +87,12 @@ class NisslConfig(Config):
     # GPU_COUNT = 8
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # (background + cells 1,2,3)
+    NUM_CLASSES = 1 + 3  # (background + cells 1,2,3)
 
     BACKBONE = "resnet50"
+
+    # Image mean (RGB)
+    # MEAN_PIXEL = np.array([181.39050844585987, 185.11335459872612, 217.73095705732484])
 
     # Settings taken from Cellpose
     # Learning rate
@@ -446,14 +449,12 @@ if __name__ == '__main__':
         dataset_val.prepare()
 
         # Image augmentation
-        # augmentation = iaa.SomeOf((0, 2), [
-        #     iaa.Fliplr(0.5),
-        #     iaa.Flipud(0.5),
-        #     iaa.OneOf([iaa.Affine(rotate=90),
-        #             iaa.Affine(rotate=180),
-        #             iaa.Affine(rotate=270)]),
-        #     iaa.Affine(rotate=(-15,15))
-        # ])
+        augmentation = iaa.Sequential([
+            iaa.OneOf([iaa.Affine(rotate=90),
+                iaa.Affine(rotate=180),
+                iaa.Affine(rotate=270)]),
+            iaa.Affine(rotate=(-15, 15)),
+        ])
 
         # *** This training schedule is an example. Update to your needs ***
 
@@ -462,14 +463,16 @@ if __name__ == '__main__':
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
                     epochs=20,
+                    # augmentation=augmentation,
                     layers='heads')
 
         # Training - Stage 2
         # Finetune layers from ResNet stage 4 and up
         print("Fine tune all layers")
         model.train(dataset_train, dataset_val,
-                    learning_rate=config.LEARNING_RATE * 0.2,
-                    epochs=80,
+                    learning_rate=config.LEARNING_RATE * 0.1,
+                    epochs=40,
+                    # augmentation=augmentation,
                     layers='all')
 
     elif args.command == "test":
