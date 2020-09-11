@@ -81,28 +81,46 @@ class NisslConfig(Config):
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 1
-
-    # Uncomment to train on 8 GPUs (default is 1)
-    # GPU_COUNT = 8
+    IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 3  # (background + cells 1,2,3)
 
     BACKBONE = "resnet50"
 
+    # Length of square anchor side in pixels
+    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
+
+    # ROIs kept after non-maximum supression (training and inference)
+    POST_NMS_ROIS_TRAINING = 1000
+    POST_NMS_ROIS_INFERENCE = 2000
+
+    # Non-max suppression threshold to filter RPN proposals.
+    # You can increase this during training to generate more propsals.
+    RPN_NMS_THRESHOLD = 0.9
+
+    # How many anchors per image to use for RPN training
+    RPN_TRAIN_ANCHORS_PER_IMAGE = 64
+
     # Image mean (RGB)
-    # MEAN_PIXEL = np.array([181.39050844585987, 185.11335459872612, 217.73095705732484])
+    MEAN_PIXEL = np.array([0, 0, 0])
 
-    # Settings taken from Cellpose
-    # Learning rate
-    LEARNING_RATE = 0.001
-    STEPS_PER_EPOCH = 200
-    VALIDATION_STEPS = 10
+    # If enabled, resizes instance masks to a smaller size to reduce
+    # memory load. Recommended when using high-resolution images.
+    USE_MINI_MASK = True
+    MINI_MASK_SHAPE = (56, 56)  # (height, width) of the mini-mask
+    IMAGE_CHANNEL_COUNT = 3
+    # Number of ROIs per image to feed to classifier/mask heads
+    # The Mask RCNN paper uses 512 but often the RPN doesn't generate
+    # enough positive proposals to fill this and keep a positive:negative
+    # ratio of 1:3. You can increase the number of proposals by adjusting
+    # the RPN NMS threshold.
+    TRAIN_ROIS_PER_IMAGE = 128
 
-    # Number of stuff predicted
-    TRAIN_ROIS_PER_IMAGE = 300
+    # Maximum number of ground truth instances to use in one image
     MAX_GT_INSTANCES = 200
+
+    # Max number of final detections per image
     DETECTION_MAX_INSTANCES = 400
 
 
@@ -403,11 +421,15 @@ if __name__ == '__main__':
         config = NisslConfig()
     else:
         class InferenceConfig(NisslConfig):
-            # Set batch size to 1 since we'll be running inference on
-            # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+            # Set batch size to 1 to run one image at a time
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
-            DETECTION_MIN_CONFIDENCE = 0
+            # Don't resize imager for inferencing
+            IMAGE_RESIZE_MODE = "pad64"
+            # Non-max suppression threshold to filter RPN proposals.
+            # You can increase this during training to generate more propsals.
+            RPN_NMS_THRESHOLD = 0.9
+
         config = InferenceConfig()
     config.display()
 
@@ -449,11 +471,15 @@ if __name__ == '__main__':
         dataset_val.prepare()
 
         # Image augmentation
-        augmentation = iaa.Sequential([
+        # http://imgaug.readthedocs.io/en/latest/source/augmenters.html
+        augmentation = iaa.SomeOf((0, 2), [
+            iaa.Fliplr(0.5),
+            iaa.Flipud(0.5),
             iaa.OneOf([iaa.Affine(rotate=90),
-                iaa.Affine(rotate=180),
-                iaa.Affine(rotate=270)]),
-            iaa.Affine(rotate=(-15, 15)),
+                    iaa.Affine(rotate=180),
+                    iaa.Affine(rotate=270)]),
+            iaa.Multiply((0.8, 1.5)),
+            iaa.GaussianBlur(sigma=(0.0, 5.0))
         ])
 
         # *** This training schedule is an example. Update to your needs ***
@@ -462,17 +488,17 @@ if __name__ == '__main__':
         print("Training network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=20,
-                    # augmentation=augmentation,
+                    epochs=50,
+                    augmentation=augmentation,
                     layers='heads')
 
         # Training - Stage 2
         # Finetune layers from ResNet stage 4 and up
         print("Fine tune all layers")
         model.train(dataset_train, dataset_val,
-                    learning_rate=config.LEARNING_RATE * 0.1,
-                    epochs=40,
-                    # augmentation=augmentation,
+                    learning_rate=config.LEARNING_RATE,
+                    epochs=500,
+                    augmentation=augmentation,
                     layers='all')
 
     elif args.command == "test":
