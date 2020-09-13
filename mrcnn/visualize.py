@@ -164,7 +164,11 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
     plt.savefig(os.path.join('./logs/image.png'))
-    if False: # auto_show
+
+    print(os.path.realpath('.'))
+    print("saved image in", os.path.join('./logs/image.png'))
+
+    if False:
         plt.show()
 
 
@@ -499,3 +503,4 @@ def display_weight_stats(model):
                 "{:+9.4f}".format(w.std()),
             ])
     display_table(table)
+
