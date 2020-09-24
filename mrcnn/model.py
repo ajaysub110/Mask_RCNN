@@ -17,13 +17,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.compat.v1 as tf1
 
-# set growth limit
-cfg = tf1.ConfigProto()
-cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
-cfg.gpu_options.allow_growth=True
-sess = tf1.Session(config=cfg)
-tf1.keras.backend.set_session(sess)
-
 import tensorflow.keras as keras
 import tensorflow.keras.backend as K
 import tensorflow.keras.layers as KL

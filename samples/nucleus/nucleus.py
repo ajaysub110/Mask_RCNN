@@ -48,16 +48,6 @@ from imgaug import augmenters as iaa
 # warnings.simplefilter(action='ignore', category=FutureWarning)
 # warnings.simplefilter(action='ignore', category=UserWarning)
 
-# import tensorflow
-import tensorflow.compat.v1 as tf
-
-# fix cudnn tensorflow errors
-cfg = tf.ConfigProto()
-cfg.gpu_options.allow_growth=True
-cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
-sess = tf.Session(config=cfg)
-tf.keras.backend.set_session(sess)
-
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
 
