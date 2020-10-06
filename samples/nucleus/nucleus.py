@@ -106,13 +106,14 @@ class NucleusConfig(Config):
 
     # Adjust depending on your GPU memory
     IMAGES_PER_GPU = 2
+    GPU_COUNT = 2
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + nucleus
 
     # Number of training and validation steps per epoch
-    STEPS_PER_EPOCH = (314 - len(VAL_IMAGE_IDS)) // IMAGES_PER_GPU
-    VALIDATION_STEPS = max(1, len(VAL_IMAGE_IDS) // IMAGES_PER_GPU)
+    STEPS_PER_EPOCH = (238 - len(VAL_IMAGE_IDS)) // (IMAGES_PER_GPU * GPU_COUNT)
+    VALIDATION_STEPS = max(1, len(VAL_IMAGE_IDS) // (IMAGES_PER_GPU * GPU_COUNT))
 
     # Don't exclude based on confidence. Since we have two classes
     # then 0.5 is the minimum anyway as it picks between nucleus and BG
