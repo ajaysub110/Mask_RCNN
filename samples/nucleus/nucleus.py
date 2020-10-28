@@ -38,12 +38,14 @@ if __name__ == '__main__':
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]= str(1)
 
+import time
 import sys
 import json
 import datetime
 import numpy as np
 import skimage.io
 from imgaug import augmenters as iaa
+import cv2
 
 # turn off warnings
 import warnings
@@ -178,6 +180,7 @@ class NucleusInferenceConfig(NucleusConfig):
     # Non-max suppression threshold to filter RPN proposals.
     # You can increase this during training to generate more propsals.
     RPN_NMS_THRESHOLD = 0.9
+    USE_MINI_MASK = False
 
 
 ############################################################
@@ -404,6 +407,39 @@ def detect(model, dataset_dir, subset):
         f.write(submission)
     print("Saved to ", submit_dir)
 
+def evaluate_ap(model, dataset, inference_config, coco, limit=0, image_ids=None):
+    # Pick COCO images from the dataset
+    image_ids = image_ids or dataset.image_ids
+
+    # Limit to a subset
+    if limit:
+        image_ids = image_ids[:limit]
+
+    # Get corresponding COCO image IDs.
+    coco_image_ids = [dataset.image_info[id]["id"] for id in image_ids]
+
+    t_prediction = 0
+    t_start = time.time()
+
+    results = []
+    APs = []
+    for image_id in image_ids:
+        # Load image and ground truth data
+        image, image_meta, gt_class_id, gt_bbox, gt_mask =\
+            modellib.load_image_gt(dataset_val, inference_config, image_id)
+        molded_images = np.expand_dims(modellib.mold_image(image, inference_config), 0)
+        # Run object detection
+        results = model.detect([image], verbose=0)
+        r = results[0]
+        # Compute AP
+        # masks = cv2.resize(np.float32(r['masks']), dsize=(gt_mask.shape[0],gt_mask.shape[1]), interpolation=cv2.INTER_CUBIC)
+        AP, precisions, recalls, overlaps =\
+            utils.compute_ap(gt_bbox, gt_class_id, gt_mask,
+                            r["rois"], r["class_ids"], r["scores"], r['masks'])
+        APs.append(AP)
+        print("AP for {}: {}".format(image_id, AP))
+    print("mAP for {} images: {}".format(len(image_ids),np.mean(APs)))
+
 
 ############################################################
 #  Command Line
@@ -489,6 +525,12 @@ if __name__ == '__main__':
         train(model, args.dataset, args.subset)
     elif args.command == "detect":
         detect(model, args.dataset, args.subset)
+    elif args.command == "test":
+        dataset_val = NucleusDataset()
+        coco = dataset_val.load_nucleus(args.dataset, args.subset)
+        dataset_val.prepare()
+        print('use mini mask', config.USE_MINI_MASK)
+        evaluate_ap(model, dataset_val, config, coco, limit=0, image_ids=None)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'detect'".format(args.command))
