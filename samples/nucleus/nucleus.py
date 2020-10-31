@@ -151,7 +151,7 @@ class NucleusConfig(Config):
     RPN_TRAIN_ANCHORS_PER_IMAGE = 64
 
     # Image mean (RGB)
-    MEAN_PIXEL = np.array([0, 0, 0])
+    MEAN_PIXEL = np.array([0, 0, 103.9])
 
     # If enabled, resizes instance masks to a smaller size to reduce
     # memory load. Recommended when using high-resolution images.
