@@ -37,6 +37,8 @@ if __name__ == '__main__':
 
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]= str(1)
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+
 
 import time
 import sys
@@ -423,7 +425,7 @@ def evaluate_iou(model, dataset, inference_config, coco, limit=0, image_ids=None
     t_start = time.time()
 
     results = []
-    APs = []
+    ious = []
     for image_id in image_ids:
         # Load image and ground truth data
         image, image_meta, gt_class_id, gt_bbox, gt_mask =\
@@ -436,6 +438,9 @@ def evaluate_iou(model, dataset, inference_config, coco, limit=0, image_ids=None
         # Compute IoU
         gt_mask = np.sum(gt_mask, axis=2)
         p_mask = np.sum(r['masks'], axis=2)
+
+        gt_mask = (gt_mask > 0) + 0
+        p_mask = (p_mask > 0) + 0
 
         intersection = np.sum(np.multiply(gt_mask, p_mask))
         union = np.sum(gt_mask) + np.sum(p_mask) - intersection
