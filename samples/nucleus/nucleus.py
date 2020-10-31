@@ -137,7 +137,16 @@ class NucleusConfig(Config):
     # IMAGE_MIN_SCALE = 2.0
 
     # Length of square anchor side in pixels
-    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
+    RPN_ANCHOR_SCALES = (16, 32, 64, 128, 256)
+
+
+    # Ratios of anchors at each cell (width/height)
+    # A value of 1 represents a square anchor, and 0.5 is a wide anchor
+    RPN_ANCHOR_RATIOS = [0.5, 1, 2, 4]
+
+    # Non-max suppression threshold to filter RPN proposals.
+    # You can increase this during training to generate more propsals.
+    RPN_NMS_THRESHOLD = 0.9
 
     # ROIs kept after non-maximum supression (training and inference)
     POST_NMS_ROIS_TRAINING = 1000
@@ -179,9 +188,11 @@ class NucleusInferenceConfig(NucleusConfig):
     IMAGES_PER_GPU = 1
     # Don't resize imager for inferencing
     # IMAGE_RESIZE_MODE = "pad64"
+
     # Non-max suppression threshold to filter RPN proposals.
     # You can increase this during training to generate more propsals.
     RPN_NMS_THRESHOLD = 0.9
+
     USE_MINI_MASK = False
 
 
