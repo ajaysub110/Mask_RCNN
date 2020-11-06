@@ -420,6 +420,45 @@ def detect(model, dataset_dir, subset):
         f.write(submission)
     print("Saved to ", submit_dir)
 
+def evaluate_f1score(model, dataset, inference_config, coco, limit=0, image_ids=None):
+    # Pick COCO images from the dataset
+    image_ids = image_ids or dataset.image_ids
+
+    # Limit to a subset
+    if limit:
+        image_ids = image_ids[:limit]
+
+    # Get corresponding COCO image IDs.
+    coco_image_ids = [dataset.image_info[id]["id"] for id in image_ids]
+
+    t_prediction = 0
+    t_start = time.time()
+
+    results = []
+    ious = []
+    for image_id in image_ids:
+        # Load image and ground truth data
+        image, image_meta, gt_class_id, gt_bbox, gt_mask =\
+            modellib.load_image_gt(dataset_val, inference_config, image_id)
+        molded_images = np.expand_dims(modellib.mold_image(image, inference_config), 0)
+        # Run object detection
+        results = model.detect([image], verbose=0)
+        r = results[0]
+
+        # Compute F1 score
+        gt_mask = np.sum(gt_mask, axis=2)
+        p_mask = np.sum(r['masks'], axis=2)
+
+        gt_mask = (gt_mask > 0) + 0
+        p_mask = (p_mask > 0) + 0
+
+        num = 2 * np.sum(np.multiply(gt_mask, p_mask))
+        den = np.sum(gt_mask) + np.sum(p_mask)
+        iou = num / den
+
+        ious.append(iou)
+        print("F1 score for {}: {}".format(image_id, iou))
+    print("mean F1 score for {} images: {}".format(len(image_ids),np.mean(ious)))
 
 def evaluate_iou(model, dataset, inference_config, coco, limit=0, image_ids=None):
     # Pick COCO images from the dataset
@@ -585,7 +624,8 @@ if __name__ == '__main__':
         dataset_val.prepare()
         print('use mini mask', config.USE_MINI_MASK)
         # evaluate_ap(model, dataset_val, config, coco, limit=0, image_ids=None)
-        evaluate_iou(model, dataset_val, config, coco, limit=0, image_ids=None)
+        # evaluate_iou(model, dataset_val, config, coco, limit=0, image_ids=None)
+        evaluate_f1score(model, dataset_val, config, coco, limit=0, image_ids=None)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'detect'".format(args.command))
