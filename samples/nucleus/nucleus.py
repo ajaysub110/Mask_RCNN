@@ -157,7 +157,7 @@ class NucleusConfig(Config):
     RPN_NMS_THRESHOLD = 0.9
 
     # How many anchors per image to use for RPN training
-    RPN_TRAIN_ANCHORS_PER_IMAGE = 64
+    # RPN_TRAIN_ANCHORS_PER_IMAGE = 64
 
     # Image mean (RGB)
     MEAN_PIXEL = np.array([0, 0, 103.9])
@@ -176,7 +176,7 @@ class NucleusConfig(Config):
     TRAIN_ROIS_PER_IMAGE = 128
 
     # Maximum number of ground truth instances to use in one image
-    MAX_GT_INSTANCES = 200
+    MAX_GT_INSTANCES = 400
 
     # Max number of final detections per image
     DETECTION_MAX_INSTANCES = 400
@@ -304,14 +304,14 @@ def train(model, dataset_dir, subset):
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=20,
-                # augmentation=augmentation,
+                augmentation=augmentation,
                 layers='heads')
 
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=510,
-                # augmentation=augmentation,
+                augmentation=augmentation,
                 layers='all')
 
 
