@@ -36,7 +36,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]= str(1)
+os.environ["CUDA_VISIBLE_DEVICES"]= str(0)
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 
