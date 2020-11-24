@@ -567,21 +567,21 @@ if __name__ == '__main__':
                         default=DEFAULT_LOGS_DIR,
                         metavar="/path/to/logs/",
                         help='Logs and checkpoints directory (default=logs/)')
-    parser.add_argument('--subset', required=False,
-                        metavar="Dataset sub-directory",
-                        help="Subset of dataset to run prediction on")
+    # parser.add_argument('--subset', required=False,
+    #                     metavar="Dataset sub-directory",
+    #                     help="Subset of dataset to run prediction on")
     args = parser.parse_args()
 
     # Validate arguments
     if args.command == "train":
         assert args.dataset, "Argument --dataset is required for training"
-    elif args.command == "detect":
-        assert args.subset, "Provide --subset to run prediction on"
+    # elif args.command == "detect":
+        # assert args.subset, "Provide --subset to run prediction on"
 
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
-    if args.subset:
-        print("Subset: ", args.subset)
+    # if args.subset:
+    #     print("Subset: ", args.subset)
     print("Logs: ", args.logs)
 
     # Configurations
@@ -625,12 +625,12 @@ if __name__ == '__main__':
 
     # Train or evaluate
     if args.command == "train":
-        train(model, args.dataset, args.subset)
+        train(model, args.dataset, "train")
     elif args.command == "detect":
-        detect(model, args.dataset, args.subset)
+        detect(model, args.dataset, "val")
     elif args.command == "test":
         dataset_val = NucleusDataset()
-        coco = dataset_val.load_nucleus(args.dataset, args.subset)
+        coco = dataset_val.load_nucleus(args.dataset, "val")
         dataset_val.prepare()
         print('use mini mask', config.USE_MINI_MASK)
         # evaluate_ap(model, dataset_val, config, coco, limit=0, image_ids=None)
