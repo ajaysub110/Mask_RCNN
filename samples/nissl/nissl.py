@@ -523,11 +523,7 @@ if __name__ == '__main__':
         dataset_val = NisslDataset()
         coco = dataset_val.load_nissl(args.dataset, args.test_ann)
         dataset_val.prepare()
-        visualize_instances(dataset_val, config, gt=False, image_id=None)
+        visualize_instances(dataset_val, config, gt=True, image_id=None)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'test'".format(args.command))
-<<<<<<< HEAD
-
-=======
->>>>>>> 46032a1df8ad06e6518e7ff7adbfd6ad3ccc4b9d
